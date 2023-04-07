@@ -130,15 +130,15 @@ title("Signal après égalisation");
 
 Vdag=conj(Vn)';
 
-esp=mean(abs(Sd-flip(WFZ)'.*rn).^2);
+%esp=mean(abs(Sd-flip(WFZ)'.*rn).^2);
 
-prt1 = ((Vdag*Vn+varbruit^2/sigmas^2*diag(1*ones(P+L,1)))^-1)*Vdag;
+WMMSE = ((Vdag*Vn+varbruit^2/sigmas^2*diag(1*ones(P+L,1)))^-1)*Vdag;
 
 WMMSE = zeros(P+L,P+L);
 
-for i=1:P+L
-    WMMSE(i,:) = prt1(:,1)-esp(1,:)';
-end
+% for i=1:P+L
+%     WMMSE(i,:) = prt1(:,1)-esp(1,:)';
+% end
 
 pn2 = zeros(P,P+L+1);
 for i=1:P
