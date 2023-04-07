@@ -17,6 +17,8 @@ bits=randi([0 1],1,Ntot);
 
 %Création de la modulation
 mod = pskmod(bits, M,pi*3/M,'gray');
+figure,
+plot(mod,'*');
 
 % % Filtrage
 %Données du filtre
@@ -27,7 +29,7 @@ alpha=0.35;
 filtre=rcosdesign(alpha,Span,Fse);
 s=conv(filtre,mod);
 
-sech = s(1:Fse:end);
+sech = upsample(s,Fse);
 
 
 % % Tracé du périodogramme
@@ -67,5 +69,63 @@ test1 = canal2(1,1,hn0, canal1(1,n));hold on,
 freqz(test2,1,1024,Fe);
 freqz(test3,1,1024,Fe);
 legend('Cas 1', 'Cas 2', 'Cas 3');
+
+%% Egalisation
+
+alpha1 = 1;
+
+vn = [1 alpha1];
+
+sigcanal = conv(sech,hn1);
+
+sigfiltre = conv(sigcanal,vn);
+
+sigech = sigfiltre(Span:Fse:end);
+
+%Q2
+
+P = 100;
+L = 1;
+
+step = diag(vn(2)*ones(P+L,1))+diag(vn(1)*ones(P,1),1);
+Vn = step(1:P,:);
+
+pseudoinv = pinv(Vn);
+
+pn = zeros(P,P+L);
+for i=1:P
+    pn(i,:) = conv(vn,flip(pseudoinv(i,:)));
+end
+
+Sd = zeros(P,1);
+
+for i=1:P
+   Sd(i)=abs(pn(i,i)).^2/(sum(abs(pn(i,:)).^2)-abs(pn(i,i)).^2);
+end
+
+[coeffegaliseur,d] = max(Sd);
+
+%Q3
+
+figure,
+subplot(2,1,1),
+plot(sigech,'*'); 
+
+sigegalise = filter(coeffegaliseur,1,sigech);
+
+subplot(2,1,2),
+plot(sigegalise,'*');
+title("Signal après égalisation");
+
+
+
+
+
+
+
+
+
+
+
 
 
