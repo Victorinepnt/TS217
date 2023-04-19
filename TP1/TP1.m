@@ -7,36 +7,38 @@ clc,
 Ns=500;    %Nombre de symboles
 Ds=1e6;     %Debit symbole
 Fse=4;      %Facteur sur echantillonnage
-Fe=4e6;     %FrÃ©quence echantillonnage
+Fe=4e6;     %Fréquence echantillonnage
+Te = 1/Fe;
 N=2;        %Nombre de bits par symbole
 Ntot=Ns*N;  %Nombre de bits
 M=4;
 SNR = 20;
 
-%CrÃ©ation du flux binaire
+%Création du flux binaire
 bits=randi([0 M-1],1,Ntot);
 
-%CrÃ©ation de la modulation
+%Création de la modulation
 modi = pskmod(bits, M,pi*3/M,'gray');
 sigmas = var(modi);
 
-figure,
+figure(1),
 plot(modi,'*');
+title("Modulation QPSK");
 
 % % Filtrage
-%DonnÃ©es du filtre
+%Données du filtre
 Span=8;
 alpha=0.35;
 
-%CrÃ©ation du filtre
+%Création du filtre
 filtre=rcosdesign(alpha,Span,Fse);
 s=conv(filtre,modi);
 
 sech = upsample(s,Fse);
 
 
-% % TracÃ© du pÃ©riodogramme
-figure,
+% % Tracé du périodogramme
+figure(2),
 pwelch(s);
 
 
@@ -51,8 +53,10 @@ hn2 = canal1(d2,n);
 
 hn1 = canal1(d1,n);
 
-
-%fvtool(hn1);
+% fvtool(hn2);
+% title("Filtre pour d=-2.5");
+% fvtool(hn1);
+% title("Filtre pour d=1.3");
 
 %canal2
 
@@ -64,7 +68,7 @@ test2 = canal2(1,1,hn0, canal1(2,n));
 
 test3 = canal2(1,1,hn0, canal1(3,n));
 
-figure,
+figure(4),
 freqz(test1,1,1024,Fe);
 hold all,
 
@@ -72,6 +76,7 @@ test1 = canal2(1,1,hn0, canal1(1,n));hold on,
 freqz(test2,1,1024,Fe);
 freqz(test3,1,1024,Fe);
 legend('Cas 1', 'Cas 2', 'Cas 3');
+%title("");
 
 %% Egalisation
 
@@ -113,15 +118,16 @@ end
 
 %Q3
 
-figure,
+figure(5),
 subplot(2,1,1),
-plot(rnb,'*'); 
+plot(rnb,'*');
+title("Signal avant égalisation");
 
 sigegalise = filter(flip(WFZ(d,:)),1,rnb);
 
 subplot(2,1,2),
 plot(sigegalise,'*');
-title("Signal aprÃ¨s Ã©galisation");
+title("Signal après égalisation ZF");
 
 
 
@@ -141,6 +147,7 @@ WMMSE = zeros(P+L,P+L);
 % end
 
 pn2 = zeros(P,P+L+1);
+a=0;
 for i=1:P
     pn2(i,:) = conv(vn,flip(WMMSE(i,:)));
 end
@@ -153,7 +160,7 @@ end
 
 [maxii,dd] = max(Sd2);
 
-figure,
+figure(6),
 subplot(2,1,1),
 plot(rn,'*'); 
 
@@ -161,4 +168,4 @@ sigegalise = filter(flip(WMMSE(d,:)),1,rn);
 
 subplot(2,1,2),
 plot(sigegalise,'*');
-title("Signal aprÃ¨s Ã©galisation");
+title("Signal après égalisation MMSE");
