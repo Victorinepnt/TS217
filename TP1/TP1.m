@@ -75,90 +75,62 @@ legend('Cas 1', 'Cas 2', 'Cas 3');
 
 %% Egalisation
 
+P=[10,30,100,1000,2000];
 alpha1 = 1;
-P = 1000;
 L = 1;
-
-varbruit = sigmas/(10^(SNR/10));
-bruit=sqrt(varbruit)*(randn(1,P+L)+1i*randn(1,P+L));
-
 
 vn = [1 alpha1];
 
-rn = conv(modi,vn);
+for i=1:length(P)
+    %Création du flux binaire
+    bits=randi([0 M-1],1,P(i));
+    
+    %Création de la modulation
+    modi = pskmod(bits, M,pi*3/M,'gray');
+    sigmas = var(modi);
 
-rnb = rn + bruit;
+    rn = conv(modi,vn);
 
-%Q2
+    %Egalisation WF
 
+    [sigegalise1,Vn]=egalWF(P(i),L,vn,rn);
 
+    figure,
 
-step = diag(vn(2)*ones(P+L,1))+diag(vn(1)*ones(P,1),1);
-Vn = step(1:P,:);
+    subplot(3,1,1)
+    plot(modi,'*')
+    title("Signal sans bruit pour P=" + P(i));
+    
+    subplot(3,1,2),
+    plot(rn,'*'); 
+    title("Signal avec bruit pour P=" + P(i));
+    
+    subplot(3,1,3),
+    plot(sigegalise1,'*');
+    title("Signal après égalisation WF pour P=" + P(i));
 
-WFZ = pinv(Vn);
+    saveas(gcf, "ImageWF" + P(i), 'png');
 
-pn = zeros(P,P+L);
-for i=1:P
-    pn(i,:) = conv(vn,flip(WFZ(i,:)));
+    %Egalisation WMMSE
+
+    sigegalise2 = egalWMMSE(P(i),L,vn,rn,Vn,sigmas,SNR);
+    
+    figure,
+    
+    subplot(3,1,1)
+    plot(modi,'*')
+    title("Signal sans bruit pour P=" + P(i));
+    
+    subplot(3,1,2),
+    plot(rn,'*'); 
+    title("Signal avec bruit pour P=" + P(i));
+    
+    
+    subplot(3,1,3),
+    plot(sigegalise2,'*');
+    title("Signal après égalisation WMMSE pour P=" + P(i));
+    
+    saveas(gcf, "ImageWMMSE" + P(i), 'png');
+
+    sum(sigegalise1==sigegalise2)
 end
-
-Sd = zeros(P,1);
-
-for i=1:P
-   Sd(i)=abs(pn(i,i)).^2/(sum(abs(pn(i,:)).^2)-abs(pn(i,i)).^2);
-end
-
-[maxi,d] = max(Sd);
-
-%Q3
-
-figure,
-subplot(2,1,1),
-plot(rnb,'*'); 
-
-sigegalise = filter(flip(WFZ(d,:)),1,rnb);
-
-subplot(2,1,2),
-plot(sigegalise,'*');
-title("Signal après égalisation");
-
-
-
-
-%Q4
-
-Vdag=conj(Vn)';
-
-%esp=mean(abs(Sd-flip(WFZ)'.*rn).^2);
-
-WMMSE = ((Vdag*Vn+varbruit^2/sigmas^2*diag(1*ones(P+L,1)))^-1)*Vdag;
-
-WMMSE = zeros(P+L,P+L);
-
-% for i=1:P+L
-%     WMMSE(i,:) = prt1(:,1)-esp(1,:)';
-% end
-
-pn2 = zeros(P,P+L+1);
-for i=1:P
-    pn2(i,:) = conv(vn,flip(WMMSE(i,:)));
-end
-
-Sd2 = zeros(P,1);
-
-for i=1:P
-   Sd2(i)=abs(pn2(i,i)).^2/(sum(abs(pn2(i,:)).^2)-abs(pn2(i,i)).^2);
-end
-
-[maxii,dd] = max(Sd2);
-
-figure,
-subplot(2,1,1),
-plot(rn,'*'); 
-
-sigegalise = filter(flip(WMMSE(d,:)),1,rn);
-
-subplot(2,1,2),
-plot(sigegalise,'*');
-title("Signal après égalisation");
